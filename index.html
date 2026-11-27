@@ -332,7 +332,7 @@ w_g1:'Otevři <a href="https://api.windy.com/keys" target="_blank" rel="noopener
 w_g2:"Vytvoř klíč pro <b>Webcams API</b> (bezplatná varianta stačí).",w_g3:"Zkopíruj ho sem a ulož. Zůstane jen v tomto prohlížeči.",
 w_ph:"API klíč",save:"Uložit",cancel:"Zrušit",retry:"↻ Zkusit znovu",chkey:"Změnit klíč",w_load:"Hledám webkamery v okolí (Windy)…",w_fail:"Windy selhalo: {0}.",
 w_none:"Windy nenašlo žádné webkamery do 15 km od {0}.",w_open:"Otevřít na Windy ↗",w_src:"Zdroj: Windy.com",w_map:"🗺 Mapa počasí (Windy)",
-w_keyrej:"klíč byl odmítnut",w_blocked:"dotaz byl zablokován nebo vypršel – může ho blokovat blokátor reklam (povol tuto stránku) nebo chybí připojení",err:"chyba",nodata_yet:"Zatím nejsou data"
+w_keyrej:"klíč byl odmítnut",w_blocked:"dotaz byl zablokován nebo vypršel – může ho blokovat blokátor reklam (povol tuto stránku) nebo chybí připojení",err:"chyba",nodata_yet:"Zatím nejsou data",stale:"uložená data z {0} (nové se nepodařilo načíst)"
 },
 en:{
 doc:"Snow Forecast – snow forecast for skiers",search_ph:"Search ski resort or place…",star_add:"Add to favourites",star_del:"Remove from favourites",
@@ -365,7 +365,7 @@ w_g1:'Open <a href="https://api.windy.com/keys" target="_blank" rel="noopener no
 w_g2:"Create a key for the <b>Webcams API</b> (the free tier is enough).",w_g3:"Copy it here and save. It stays only in this browser.",
 w_ph:"API key",save:"Save",cancel:"Cancel",retry:"↻ Try again",chkey:"Change key",w_load:"Searching for nearby webcams (Windy)…",w_fail:"Windy failed: {0}.",
 w_none:"Windy found no webcams within 15 km of {0}.",w_open:"Open on Windy ↗",w_src:"Source: Windy.com",w_map:"🗺 Weather map (Windy)",
-w_keyrej:"key was rejected",w_blocked:"request was blocked or timed out – an ad blocker may be blocking it (allow this page) or you are offline",err:"error",nodata_yet:"No data yet"
+w_keyrej:"key was rejected",w_blocked:"request was blocked or timed out – an ad blocker may be blocking it (allow this page) or you are offline",err:"error",nodata_yet:"No data yet",stale:"cached data from {0} (could not fetch fresh data)"
 }};
 let LANG=(()=>{const v=store.get("sf_lang");if(v==="cs"||v==="en")return v;return /^(cs|sk)/i.test(navigator.language||"")?"cs":"en"})();
 const tr=(k,...a)=>{let x=(I18N[LANG][k]??I18N.cs[k]??k);a.forEach((v,i)=>{x=x.split("{"+i+"}").join(v)});return x};
@@ -618,6 +618,7 @@ function noteUpdate(){
     x+=(x?" · ":"")+(S.refine?tr("n_ref"):tr("n_raw"));
     x+=" · "+tr("n_mod")+": "+MODELS.filter(m=>S.data[m.id]).map(m=>m.name).join(", ");
   }
+  if(S.stale)x+=" · "+tr("stale",new Date(S.stale).toLocaleTimeString(LANG==="cs"?"cs-CZ":"en-GB",{hour:"2-digit",minute:"2-digit"}));
   $("note").textContent=x;
 }
 function renderTabs(){
@@ -644,11 +645,28 @@ $("tabs").addEventListener("input",e=>{
 /* ---------- data ---------- */
 async function fetchModel(m,lat,lon){
   const base=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=6&models=${m.id}&hourly=`;
-  let r=await ft(base+SURF+","+PROF,null,20000);
-  if(!r.ok)r=await ft(base+SURF,null,20000);
-  const j=await r.json();
-  if(!r.ok)throw new Error(j.reason||("HTTP "+r.status));
-  return j;
+  let last=null;
+  for(const vars of [SURF+","+PROF,SURF]){
+    try{
+      const r=await ft(base+vars,null,20000);
+      const j=await r.json().catch(()=>({}));
+      if(r.ok&&j.hourly)return j;
+      last=new Error((j&&j.reason)||("HTTP "+r.status));
+      if(r.status===429)break;
+    }catch(e){last=e}
+  }
+  throw last||new Error("?");
+}
+const FC_TTL=30*60000;
+function fcGet(id){try{const o=JSON.parse(store.get("sf_fc_"+id)||"null");return o&&o.data?o:null}catch(e){return null}}
+function fcSet(id,data,off){
+  const key="sf_fc_"+id;
+  try{
+    const ks=[];
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("sf_fc_")&&k!==key)ks.push(k)}
+    ks.map(k=>{let t=0;try{t=JSON.parse(localStorage.getItem(k)).ts||0}catch(e){}return{k,t}}).sort((a,b)=>b.t-a.t).slice(3).forEach(x=>localStorage.removeItem(x.k));
+  }catch(e){}
+  store.set(key,JSON.stringify({ts:Date.now(),off,data}));
 }
 async function load(){
   const id=++S.req,{lat,lon}=S.loc;
@@ -657,19 +675,28 @@ async function load(){
   $("tbl").className="";
   $("tbl").innerHTML=`<div class="msg">${tr("loading_fc")}</div>`;
   $("cards").innerHTML="";
+  const cid=lid(lat,lon),cached=fcGet(cid);
+  if(cached&&Date.now()-cached.ts<FC_TTL){S.data=cached.data;S.off=cached.off;S.stale=null;render();return}
   try{
     const res=await Promise.allSettled(MODELS.map(m=>fetchModel(m,lat,lon)));
     if(id!==S.req)return;
-    const data={};let first=null;
+    const data={},errs=[];let first=null;
     res.forEach((r,i)=>{
       if(r.status==="fulfilled"&&r.value.hourly&&r.value.hourly.temperature_2m){data[MODELS[i].id]=r.value;first=first||r.value}
+      else errs.push(r.status==="rejected"?((r.reason&&r.reason.message)||String(r.reason)):"?");
     });
-    if(!first)throw new Error(tr("err_nomodel"));
-    S.data=data;S.off=first.utc_offset_seconds||0;
+    if(!first){
+      const e=errs[0]||tr("err_nomodel");
+      throw new Error(/failed to fetch|networkerror|load failed|abort/i.test(e)?tr("w_blocked"):e);
+    }
+    S.data=data;S.off=first.utc_offset_seconds||0;S.stale=null;
+    fcSet(cid,data,S.off);
     render();
   }catch(err){
     if(id!==S.req)return;
-    $("tbl").innerHTML=`<div class="msg err">${tr("err_load")}: ${esc(err.message)}</div>`;
+    if(cached){S.data=cached.data;S.off=cached.off;S.stale=cached.ts;render();return}
+    $("tbl").innerHTML=`<div class="msg err">${tr("err_load")}: ${esc(err.message)}<br><button class="lnk" id="fcRetry" type="button">${tr("retry")}</button></div>`;
+    $("fcRetry").onclick=()=>load();
   }
 }
 
