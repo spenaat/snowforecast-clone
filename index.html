@@ -47,12 +47,12 @@ h1{font-size:26px;margin-bottom:2px;display:flex;align-items:center;gap:8px}
 .sub{color:var(--mute);margin-bottom:12px;font-size:14px}
 
 /* nastavení */
-.opts{background:var(--card);border-radius:12px;margin-bottom:16px;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.opts{background:var(--card);border-radius:12px;margin-bottom:12px;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .opts>summary{list-style:none;cursor:pointer;padding:10px 14px;font-weight:600;display:flex;align-items:center;gap:8px}
 .opts>summary::-webkit-details-marker{display:none}
 .opts>summary::after{content:"▾";margin-left:auto;color:var(--mute);transition:transform .2s}
 .opts[open]>summary::after{transform:rotate(180deg)}
-.optsbody{display:flex;flex-wrap:wrap;gap:12px 14px;align-items:center;padding:0 14px 12px}
+.optsbody{display:flex;flex-wrap:wrap;gap:12px 14px;align-items:center;padding:12px 14px}
 .optsbody select,.optsbody input[type=password]{padding:5px 8px;border-radius:8px;border:1px solid var(--line);font-size:13px}
 .optsbody input[type=password]{width:170px}
 .optsbody label{display:flex;gap:6px;align-items:center}
@@ -87,6 +87,11 @@ h1{font-size:26px;margin-bottom:2px;display:flex;align-items:center;gap:8px}
 .seg{display:inline-flex;background:#dfe8f1;border-radius:10px;padding:3px}
 .seg button{border:0;background:transparent;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;color:var(--ink)}
 .seg button.active{background:#fff;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.tbr{display:flex;align-items:center;gap:6px}
+.gear{border:0;background:transparent;color:var(--mute);font-size:19px;line-height:1;width:34px;height:34px;border-radius:50%;cursor:pointer}
+.gear:hover{background:#dfe8f1;color:var(--brand2)}
+.gear[aria-expanded="true"]{background:var(--snowbg);color:var(--brand)}
+.opts{margin-top:0}
 .lnk{border:0;background:none;color:var(--brand);font-size:13px;cursor:pointer;padding:6px 4px}
 
 /* velká tabulka – pevné rozložení, přizpůsobí se šířce */
@@ -240,8 +245,15 @@ footer{text-align:center;color:var(--mute);font-size:12px;padding:20px}
 <main>
   <h1><span id="title">Načítám…</span><button id="star" class="star" type="button" aria-pressed="false" title="Přidat do oblíbených">☆</button></h1>
   <div class="sub" id="sub"></div>
-  <details class="opts" id="opts">
-    <summary data-i="opts_sum">⚙ Model a nastavení</summary>
+    <div class="tabs" id="tabs"></div>
+  <div class="cards" id="cards"></div>
+  <div class="toolbar">
+    <div class="seg" id="seg">
+      <button data-v="auto" data-i="v_auto">Auto</button><button data-v="digest" data-i="v_digest">Přehled</button><button data-v="table" data-i="v_table">Tabulka</button>
+    </div>
+    <div class="tbr"><button class="lnk" id="expAll" type="button">Rozbalit vše</button><button class="gear" id="gear" type="button" aria-expanded="false" aria-controls="opts">⚙</button></div>
+  </div>
+  <div class="opts" id="opts" hidden>
     <div class="optsbody">
       <label>Model <select id="model"></select></label>
       <label><input type="checkbox" id="refine" checked> <span data-i="refine">Upřesnit teplotu, vítr a sníh podle výškového profilu</span></label>
@@ -256,14 +268,6 @@ footer{text-align:center;color:var(--mute);font-size:12px;padding:20px}
       <button id="impFav" type="button" data-i="impfav">Importovat oblíbené</button>
       <button id="rstFav" type="button" data-i="rstfav">Obnovit výchozí oblíbené</button>
     </div>
-  </details>
-  <div class="tabs" id="tabs"></div>
-  <div class="cards" id="cards"></div>
-  <div class="toolbar">
-    <div class="seg" id="seg">
-      <button data-v="auto" data-i="v_auto">Auto</button><button data-v="digest" data-i="v_digest">Přehled</button><button data-v="table" data-i="v_table">Tabulka</button>
-    </div>
-    <button class="lnk" id="expAll" type="button">Rozbalit vše</button>
   </div>
   <div id="tbl"><div class="msg">Načítám předpověď…</div></div>
   <details class="cams" id="cams">
@@ -303,7 +307,7 @@ const store={
 const I18N={
 cs:{
 doc:"Snow Forecast – předpověď sněhu pro lyžaře",search_ph:"Hledat skiareál nebo místo…",star_add:"Přidat do oblíbených",star_del:"Odebrat z oblíbených",
-opts_sum:"⚙ Model a nastavení",model_cons:"Konsenzus (ICON + ECMWF + GFS)",refine:"Upřesnit teplotu, vítr a sníh podle výškového profilu",diag:"Kopírovat diagnostická data",
+opts_t:"Model a nastavení",model_cons:"Konsenzus (ICON + ECMWF + GFS)",refine:"Upřesnit teplotu, vítr a sníh podle výškového profilu",diag:"Kopírovat diagnostická data",
 start_l:"Při otevření načíst",start_last:"poslední místo",start_first:"první oblíbené",share:"Kopírovat odkaz na toto místo",expfav:"Exportovat oblíbené",impfav:"Importovat oblíbené",rstfav:"Obnovit výchozí oblíbené",
 v_auto:"Auto",v_digest:"Přehled",v_table:"Tabulka",exp_all:"Rozbalit vše",col_all:"Sbalit vše",loading_fc:"Načítám předpověď…",cams_sum:"📷 Webkamery",
 footer:"Data: Open-Meteo.com, OpenStreetMap, volitelně Windy.com · Předpověď je modelová a může se lišit od reálných podmínek.",
@@ -336,7 +340,7 @@ w_keyrej:"klíč byl odmítnut",w_blocked:"dotaz byl zablokován nebo vypršel �
 },
 en:{
 doc:"Snow Forecast – snow forecast for skiers",search_ph:"Search ski resort or place…",star_add:"Add to favourites",star_del:"Remove from favourites",
-opts_sum:"⚙ Model & settings",model_cons:"Consensus (ICON + ECMWF + GFS)",refine:"Refine temperature, wind and snow using the altitude profile",diag:"Copy diagnostic data",
+opts_t:"Model & settings",model_cons:"Consensus (ICON + ECMWF + GFS)",refine:"Refine temperature, wind and snow using the altitude profile",diag:"Copy diagnostic data",
 start_l:"On open, load",start_last:"last location",start_first:"first favourite",share:"Copy link to this location",expfav:"Export favourites",impfav:"Import favourites",rstfav:"Reset default favourites",
 v_auto:"Auto",v_digest:"Summary",v_table:"Table",exp_all:"Expand all",col_all:"Collapse all",loading_fc:"Loading forecast…",cams_sum:"📷 Webcams",
 footer:"Data: Open-Meteo.com, OpenStreetMap, optionally Windy.com · The forecast is model-based and may differ from real conditions.",
@@ -375,6 +379,7 @@ function applyStatic(){
   document.querySelectorAll("[data-i]").forEach(e=>{e.textContent=tr(e.dataset.i)});
   document.querySelectorAll("[data-ip]").forEach(e=>{e.placeholder=tr(e.dataset.ip)});
   document.querySelectorAll("#langsw button").forEach(b=>b.classList.toggle("active",b.dataset.l===LANG));
+  $("gear").title=tr("opts_t");$("gear").setAttribute("aria-label",tr("opts_t"));
   buildModelSel();
 }
 const S={loc:null,elev:{top:0,mid:0,bot:0},active:"mid",data:null,off:0,req:0,det:0,mode:"cons",refine:true,elevNote:"",view:"auto",open:null,dts:[],edit:false,cams:null,camTok:0,camEdit:false,camTimer:null};
@@ -493,7 +498,7 @@ function initialLocation(){
 function buildModelSel(){const v=$("model").value||"cons";$("model").innerHTML=`<option value="cons">${tr("model_cons")}</option>`+MODELS.map(m=>`<option value="${m.id}">${m.name}</option>`).join("");$("model").value=v}
 $("model").onchange=e=>{S.mode=e.target.value;render()};
 $("refine").onchange=e=>{S.refine=e.target.checked;render()};
-$("opts").open=window.innerWidth>=700;
+$("gear").onclick=()=>{const o=$("opts");o.hidden=!o.hidden;$("gear").setAttribute("aria-expanded",o.hidden?"false":"true")};
 $("start").value=store.get("sf_start")||"last";
 $("start").onchange=e=>store.set("sf_start",e.target.value);
 $("shareBtn").onclick=e=>{
