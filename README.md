@@ -1,10 +1,10 @@
-# ❄ Snow Forecast
+# ❄ Snow Forecast Clone
 
 **English** · [Česky](#česky)
 
 A snow forecast for ski resorts worldwide, in a single `index.html` file. No server, no build, no framework.
 
-**Live app:** https://<your-username>.github.io/snow-forecast/
+**Live app:** https://spenaat.github.io/snowforecast-clone/
 
 ## Features
 
@@ -57,7 +57,7 @@ Settings → Pages → Deploy from a branch → `main` / root.
 
 Sněhová předpověď pro lyžařská střediska po celém světě v jednom souboru `index.html`. Bez serveru, bez buildu, bez frameworku.
 
-**Živá appka:** https://<tvoje-jméno>.github.io/snow-forecast/
+**Živá appka:** https://spenaat.github.io/snowforecast-clone/
 
 ### Funkce
 
