@@ -17,7 +17,7 @@ header{background:linear-gradient(135deg,var(--brand2),var(--brand));color:#fff;
 .top{max-width:1400px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 .logo{font-weight:800;font-size:20px;letter-spacing:-.3px;white-space:nowrap}
 .logo span{color:#8fd0ff}
-.search{position:relative;flex:1 1 280px;max-width:420px}
+.search{position:relative;flex:1 1 240px;max-width:300px}
 .search input{width:100%;padding:10px 14px;border-radius:24px;border:0;font-size:15px;outline:none}
 .sugg{position:absolute;top:100%;left:0;right:0;background:#fff;color:var(--ink);border-radius:12px;margin-top:6px;box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;display:none;z-index:60}
 .sugg.open{display:block}
@@ -91,6 +91,8 @@ h1{font-size:26px;margin-bottom:2px;display:flex;align-items:center;gap:8px}
 .gear{border:0;background:transparent;color:var(--mute);font-size:19px;line-height:1;width:34px;height:34px;border-radius:50%;cursor:pointer}
 .gear:hover{background:#dfe8f1;color:var(--brand2)}
 .gear[aria-expanded="true"]{background:var(--snowbg);color:var(--brand)}
+header .gear{color:#fff;opacity:.9;width:32px;height:32px}
+header .gear:hover,header .gear[aria-expanded="true"]{background:rgba(255,255,255,.22);color:#fff}
 .opts{margin-top:0}
 .lnk{border:0;background:none;color:var(--brand);font-size:13px;cursor:pointer;padding:6px 4px}
 
@@ -235,6 +237,7 @@ footer{text-align:center;color:var(--mute);font-size:12px;padding:20px}
   <div class="top">
     <div class="logo">❄ Snow<span>Forecast</span></div>
     <div class="langsw" id="langsw"><button type="button" data-l="cs">CS</button><button type="button" data-l="en">EN</button></div>
+    <button class="gear" id="gear" type="button" aria-expanded="false" aria-controls="opts">⚙</button>
     <div class="search">
       <input id="q" type="search" data-ip="search_ph" placeholder="Hledat skiareál nebo místo…" autocomplete="off">
       <div class="sugg" id="sugg"></div>
@@ -243,16 +246,6 @@ footer{text-align:center;color:var(--mute);font-size:12px;padding:20px}
   </div>
 </header>
 <main>
-  <h1><span id="title">Načítám…</span><button id="star" class="star" type="button" aria-pressed="false" title="Přidat do oblíbených">☆</button></h1>
-  <div class="sub" id="sub"></div>
-    <div class="tabs" id="tabs"></div>
-  <div class="cards" id="cards"></div>
-  <div class="toolbar">
-    <div class="seg" id="seg">
-      <button data-v="auto" data-i="v_auto">Auto</button><button data-v="digest" data-i="v_digest">Přehled</button><button data-v="table" data-i="v_table">Tabulka</button>
-    </div>
-    <div class="tbr"><button class="lnk" id="expAll" type="button">Rozbalit vše</button><button class="gear" id="gear" type="button" aria-expanded="false" aria-controls="opts">⚙</button></div>
-  </div>
   <div class="opts" id="opts" hidden>
     <div class="optsbody">
       <label>Model <select id="model"></select></label>
@@ -268,6 +261,16 @@ footer{text-align:center;color:var(--mute);font-size:12px;padding:20px}
       <button id="impFav" type="button" data-i="impfav">Importovat oblíbené</button>
       <button id="rstFav" type="button" data-i="rstfav">Obnovit výchozí oblíbené</button>
     </div>
+  </div>
+  <h1><span id="title">Načítám…</span><button id="star" class="star" type="button" aria-pressed="false" title="Přidat do oblíbených">☆</button></h1>
+  <div class="sub" id="sub"></div>
+    <div class="tabs" id="tabs"></div>
+  <div class="cards" id="cards"></div>
+  <div class="toolbar">
+    <div class="seg" id="seg">
+      <button data-v="auto" data-i="v_auto">Auto</button><button data-v="digest" data-i="v_digest">Přehled</button><button data-v="table" data-i="v_table">Tabulka</button>
+    </div>
+    <button class="lnk" id="expAll" type="button">Rozbalit vše</button>
   </div>
   <div id="tbl"><div class="msg">Načítám předpověď…</div></div>
   <details class="cams" id="cams">
